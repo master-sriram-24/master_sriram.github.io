@@ -1,61 +1,8 @@
-const grid = document.getElementById("grid");
-const filtersEl = document.getElementById("filters");
-const lb = document.getElementById("lightbox");
-const lbImg = document.getElementById("lb-img");
-const lbCap = document.getElementById("lb-cap");
-document.getElementById("year").textContent = new Date().getFullYear();
-
-let current = "All";
-let visible = [];
-let index = 0;
-
-const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-
-function renderFilters() {
-  const cats = ["All", ...new Set(PHOTOS.map(p => p.category).filter(Boolean))];
-  filtersEl.innerHTML = "";
-  cats.forEach(c => {
-    const b = document.createElement("button");
-    b.textContent = c;
-    if (c === current) b.classList.add("active");
-    b.onclick = () => { current = c; renderFilters(); renderGrid(); };
-    filtersEl.appendChild(b);
-  });
-}
-
-function renderGrid() {
-  visible = PHOTOS.filter(p => current === "All" || p.category === current);
-  grid.innerHTML = "";
-  visible.forEach((p, i) => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `<img loading="lazy" src="${esc(p.file)}" alt="${esc(p.title)}"><div class="label">${esc(p.title)}</div>`;
-    card.onclick = () => open(i);
-    grid.appendChild(card);
-  });
-}
-
-function show() {
-  const p = visible[index];
-  lbImg.src = p.file;
-  lbImg.alt = p.title;
-  const details = [p.date, p.camera, p.optics, p.exposure].filter(Boolean).map(esc).join(" · ");
-  lbCap.innerHTML = `<strong>${esc(p.title)}</strong>${details}${p.notes ? "<br>" + esc(p.notes) : ""}`;
-}
-function open(i) { index = i; show(); lb.hidden = false; document.body.style.overflow = "hidden"; }
-function close() { lb.hidden = true; document.body.style.overflow = ""; }
-function step(d) { index = (index + d + visible.length) % visible.length; show(); }
-
-document.getElementById("close").onclick = close;
-document.getElementById("prev").onclick = () => step(-1);
-document.getElementById("next").onclick = () => step(1);
-lb.addEventListener("click", e => { if (e.target === lb) close(); });
-document.addEventListener("keydown", e => {
-  if (lb.hidden) return;
-  if (e.key === "Escape") close();
-  if (e.key === "ArrowLeft") step(-1);
-  if (e.key === "ArrowRight") step(1);
+document.addEventListener('DOMContentLoaded',()=>{
+ document.getElementById('year').textContent=new Date().getFullYear();
+ const slots={hero:'hero.jpg','story-2022':'first-pixel-2022.jpg','story-2023-city':'chennai-milky-way-2023.jpg','story-2023-hometown':'hometown-milky-way-2023.jpg','story-2024-comet':'comet-beach-2024.jpg','story-kodaikanal':'kodaikanal-milky-way-2025.jpg','story-vattavada':'vattavada-2025.jpg','story-geminids':'poombarai-geminids-2025.jpg',about:'about-sriram.jpg'};
+ Object.entries(slots).forEach(([key,file])=>{const el=document.querySelector(`[data-image="${key}"]`);if(!el)return;const img=new Image();img.onload=()=>{img.alt=el.getAttribute('aria-label')||'Astrophotography by Sriram';el.appendChild(img);el.classList.add('has-image')};img.src='assets/images/'+file});
+ const grid=document.getElementById('gallery-grid'),photos=Array.isArray(window.PORTFOLIO_GALLERY)?window.PORTFOLIO_GALLERY:[];
+ function render(filter='all'){grid.innerHTML='';const visible=photos.filter(p=>filter==='all'||p.category===filter);if(!visible.length){grid.innerHTML='<div class="gallery-empty"><strong>Your photographs will appear here.</strong><br>Add image entries to <code>gallery.js</code> and put files in <code>assets/images/</code>.</div>';return}visible.forEach(p=>{const card=document.createElement('article');card.className='gallery-card';const img=document.createElement('img');img.src=p.image;img.alt=p.title||'Astrophotograph by Sriram';img.loading='lazy';img.onerror=()=>img.remove();const label=document.createElement('div');label.className='card-label';const title=document.createElement('strong');title.textContent=p.title||'Untitled photograph';const date=document.createElement('span');date.textContent=p.date||'';label.append(title,date);card.append(img,label);grid.append(card)})}
+ render();document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');render(b.dataset.filter)}));
 });
-
-renderFilters();
-renderGrid();
